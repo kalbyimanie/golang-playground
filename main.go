@@ -1,57 +1,30 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 )
 
-func readContentFromLine(filename string, lineNumber int) ([]string, error) {
-	file, err := os.Open(filename)
+func readContentFromLastCommit(filename string) ([]byte, error) {
+	cmd := exec.Command("git", "show", "HEAD:"+filename)
+	output, err := cmd.Output()
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	var content []string
-	currentLine := 1
-
-	// Read the file until the desired line number is reached
-	for scanner.Scan() {
-		if currentLine >= lineNumber {
-			content = append(content, scanner.Text())
-		}
-		currentLine++
-
-		if currentLine > lineNumber {
-			break
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return content, nil
+	return output, nil
 }
 
 func main() {
 	filename := "yourfile.txt"
-	lineNumber := 5
 
-	content, err := readContentFromLine(filename, lineNumber)
+	content, err := readContentFromLastCommit(filename)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
 
-	if len(content) == 0 {
-		fmt.Println("Line number is out of range.")
-	} else {
-		fmt.Println("Content from line", lineNumber, "onwards:")
-		for _, line := range content {
-			fmt.Println(line)
-		}
-	}
+	fmt.Println("Content of the file from the last commit:")
+	fmt.Println(string(content))
 }
