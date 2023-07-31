@@ -1,60 +1,56 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"strings"
-
-	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
-func getChangedLines(filename, prevContent string) ([]string, error) {
-	content, err := ioutil.ReadFile(filename)
+func readContentFromLine(filename string, lineNumber int) ([]string, error) {
+	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
-	dmp := diffmatchpatch.New()
-	diffs := dmp.DiffMain(prevContent, string(content), false)
+	scanner := bufio.NewScanner(file)
+	var content []string
+	currentLine := 1
 
-	var changedLines []string
-	lineCount := 0
-	for _, diff := range diffs {
-		lines := strings.Split(diff.Text, "\n")
-		for _, line := range lines {
-			if strings.HasPrefix(line, "- ") || strings.HasPrefix(line, "+ ") {
-				changedLines = append(changedLines, fmt.Sprintf("%d: %s", lineCount+1, line))
-			}
-			if !strings.HasPrefix(line, "+ ") {
-				lineCount++
-			}
+	// Read the file until the desired line number is reached
+	for scanner.Scan() {
+		if currentLine >= lineNumber {
+			content = append(content, scanner.Text())
+		}
+		currentLine++
+
+		if currentLine > lineNumber {
+			break
 		}
 	}
 
-	return changedLines, nil
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return content, nil
 }
 
 func main() {
 	filename := "yourfile.txt"
-	prevContent := `
-		Line 1
-		Line 2
-		Line 3
-		Line 4
-	`
+	lineNumber := 5
 
-	changedLines, err := getChangedLines(filename, prevContent)
+	content, err := readContentFromLine(filename, lineNumber)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
 
-	if len(changedLines) == 0 {
-		fmt.Println("No lines were changed.")
+	if len(content) == 0 {
+		fmt.Println("Line number is out of range.")
 	} else {
-		fmt.Println("Changed lines:")
-		for _, line := range changedLines {
+		fmt.Println("Content from line", lineNumber, "onwards:")
+		for _, line := range content {
 			fmt.Println(line)
 		}
 	}
