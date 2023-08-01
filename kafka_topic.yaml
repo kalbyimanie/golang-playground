@@ -15,6 +15,12 @@ kafka-clusters:
               configuration:
                 - replication_factor :
                 - partition_size :
+          - name : "ttd-evets-v4"
+            topics:
+              name: "abc"
+              configuration:
+                - replication_factor :
+                - partition_size :
     - verticals :
         name : "hotel"
         service_names :

@@ -27,7 +27,7 @@ func readNewLinesFromLastCommit(filename string) ([]string, error) {
 }
 
 func main() {
-	filename := "yourfile.txt"
+	filename := "kafka_topic.yaml"
 
 	lines, err := readNewLinesFromLastCommit(filename)
 	if err != nil {
