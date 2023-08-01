@@ -1,0 +1,50 @@
+kafka-clusters:
+  - kafka-hotel:
+    - verticals :
+        name : "ttd"
+        service_names :
+          - name : "ttd-evets-v2"
+            topics:
+              name: "abc"
+              configuration:
+                - replication_factor :
+                - partition_size :
+          - name : "ttd-evets-v3"
+            topics:
+              name: "abc"
+              configuration:
+                - replication_factor :
+                - partition_size :
+    - verticals :
+        name : "hotel"
+        service_names :
+          - name : "hotel-native-core"
+            topics:
+              name: "abc"
+              configuration:
+                - replication_factor :
+                - partition_size :
+          - name : "hotel-agoda-sync"
+            topics:
+              name: "abc"
+              configuration:
+                - replication_factor :
+                - partition_size :
+  - kafka-data:
+    - verticals :
+        name : "data"
+        service_names :
+          - name : "hotel-native-core"
+            topics:
+              name:
+              configuration:
+                -
+                -
+          - name : "hotel-native-core"
+            topics:
+              name:
+              configuration:
+                -
+                -
+
+
