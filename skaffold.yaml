@@ -1,0 +1,21 @@
+apiVersion: skaffold/v2beta10
+kind: Config
+profiles:
+  - name: local-registry
+    build:
+      artifacts:
+        - image: localhost:5000/my-app
+          context: .
+          docker:
+            dockerfile: app.Dockerfile
+build:
+  artifacts:
+    - image: my-app
+      context: .
+      docker:
+        dockerfile: app.Dockerfile
+deploy:
+  kubectl:
+    manifests:
+      - manifests/app/namespace.yaml
+      - manifests/app/*.yaml

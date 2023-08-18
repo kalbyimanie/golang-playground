@@ -1,46 +1,71 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"time"
 )
 
-func readNewLinesFromLastCommit(filename string) ([]string, error) {
-	cmd := exec.Command("git", "diff", "HEAD^", "--", filename)
-	output, err := cmd.Output()
+func getServerIp(w http.ResponseWriter, r *http.Request) {
+
+	url := "https://ipinfo.io/json"
+
+	timeoutSecs := 10
+
+	context, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	// NOTE provide an http request method
+	req, err := http.NewRequestWithContext(context, "GET", url, nil)
 	if err != nil {
-		return nil, err
+		http.Error(w, "[ERROR]:  Timed out", http.StatusInternalServerError)
+		return
 	}
 
-	var newLines []string
-	lines := strings.Split(string(output), "\n")
+	// NOTE provide connection
+	var httpClient = &http.Client{}
 
-	for _, line := range lines {
-		if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
-			newLines = append(newLines, strings.TrimPrefix(line, "+"))
-		}
+	// NOTE create httpClient request
+	resp, err := httpClient.Do(req)
+
+	if err != nil {
+
+		http.Error(w, "[ERROR]:  Timed out", http.StatusInternalServerError)
+		return
 	}
 
-	return newLines, nil
+	// NOTE check status code
+	if resp.StatusCode != 200 {
+		log.Printf("[ERROR]: %d Request to %s", resp.StatusCode, url)
+
+		fmt.Fprintf(w, "[ERROR]: %d Request to %s", resp.StatusCode, url)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	// NOTE read response
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		log.Printf("%s\n", err)
+	}
+
+	fmt.Println(string(body))
+	fmt.Fprint(w, string(body))
+
+	log.Printf("data fetched successfully\n")
 }
 
 func main() {
-	filename := "kafka_topic.yaml"
 
-	lines, err := readNewLinesFromLastCommit(filename)
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
+	var portNumber string = "8080"
 
-	if len(lines) == 0 {
-		fmt.Println("No new lines were added to the file in the last commit.")
-	} else {
-		fmt.Println("New lines added to the file in the last commit:")
-		for _, line := range lines {
-			fmt.Println(line)
-		}
-	}
+	http.HandleFunc("/", getServerIp)
+	log.Printf("listening on port %s", portNumber)
+	http.ListenAndServe("localhost"+":"+portNumber, nil)
+
 }
